@@ -67,27 +67,28 @@ describe('VendingMachine', () => {
 
   describe('入れたお金に応じて、買えるもののボタンが光ります', () => {
     test('100円を入れると、ボタン A が光る', () => {
-      const actual = machine.insert(100).isShining('A')
+      const actual = machine.insert(100).isButtonShining('A')
       expect(actual).toBeTruthy()
     })
 
     test('100円を入れないとき、ボタン A が光っていない', () => {
-      const actual = machine.isShining('A')
+      const actual = machine.isButtonShining('A')
       expect(actual).toBeFalsy()
     })
 
     test('100円を入れても、ボタン R は光らない', () => {
-      const actual = machine.insert(100).isShining('R')
+      const actual = machine.insert(100).isButtonShining('R')
       expect(actual).toBeFalsy()
     })
 
     test('100円を入れても、ボタン Z は光らない', () => {
-      const actual = machine.insert(100).isShining('Z')
-      expect(actual).toBeFalsy()
+      expect(() => {
+        machine.insert(100).isButtonShining('Z')
+      }).toThrow()
     })
 
     test('200円を入れると、ボタン R が光る', () => {
-      const actual = machine.insert(100).insert(100).isShining('R')
+      const actual = machine.insert(100).insert(100).isButtonShining('R')
       expect(actual).toBeTruthy()
     })
   })
@@ -109,6 +110,27 @@ describe('VendingMachine', () => {
     test('500円を1回を入れると、コーラが買える', () => {
       const actual = machine.insert(500).pressButton('A')
       expect(actual).toBe('Cola')
+    })
+  })
+
+  describe('ボタンを押して飲み物を買うと、お釣りが出ます', () => {
+    test('150円を入れてコーラを買うと50円のお釣りが出る', () => {
+      const actual = machine.insert(100).insert(50).buy('A')
+      expect(actual.beverageName).toBe('Cola')
+      expect(actual.change).toBe(50)
+    })
+
+    test('120円を入れてウーロン茶を買うと50円のお釣りが出る', () => {
+      const actual = machine.insert(100).insert(10).insert(10).buy('B')
+      expect(actual.beverageName).toBe('Woo long tea')
+      expect(actual.change).toBe(20)
+    })
+  })
+
+  describe('飲み物を買わなくても、返却ボタンを押すと投入したお金が戻ってきます', () => {
+    test('100円を返却ボタンを押すと100円のお釣りが出る', () => {
+      const actual = machine.insert(100).cancel()
+      expect(actual).toBe(100)
     })
   })
 })
