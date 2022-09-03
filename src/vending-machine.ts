@@ -135,20 +135,35 @@ export class VendingMachine {
     return this
   }
 
-  touchCard(card: FeliCa): Beverage['name'] {
+  touchCard(card: Card): Beverage['name'] {
     if (this.selectedBeverage === null) throw new Error()
     card.consume(this.selectedBeverage.price)
     return this.selectedBeverage.name
   }
 }
 
-interface FeliCa {
+interface Card {
   getBalance(): number
 
   consume(price: number): this
 }
 
-export class Suica implements FeliCa {
+export class Suica implements Card {
+  constructor(private balance: number) {
+  }
+
+  getBalance(): number {
+    return this.balance
+  }
+
+  consume(price: number): this {
+    if (this.balance < price) throw new Error('Short of balance')
+    this.balance -= price
+    return this
+  }
+}
+
+export class Visa implements Card {
   constructor(private balance: number) {
   }
 

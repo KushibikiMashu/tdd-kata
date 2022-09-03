@@ -1,4 +1,4 @@
-import {Coin, Suica, VendingMachine} from '../src/vending-machine'
+import {Coin, Suica, VendingMachine, Visa} from '../src/vending-machine'
 
 describe('VendingMachine', () => {
   let machine: VendingMachine
@@ -146,6 +146,17 @@ describe('VendingMachine', () => {
 
       const balance = card.getBalance()
       expect(balance).toBe(10)
+    })
+  })
+
+  describe('クレジットカード支払いに対応', () => {
+    test('支払い可能額が1000円のVisaカードでColaが買える', () => {
+      const card = new Visa(1000)
+      const actual = machine.select('A').touchCard(card)
+      expect(actual).toBe('Cola')
+
+      const balance = card.getBalance()
+      expect(balance).toBe(900)
     })
   })
 })
