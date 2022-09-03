@@ -21,7 +21,7 @@ type ButtonId = typeof buttonIds[number]
 
 export class Coin {
   private readonly allowedValues: number[] = [1, 5, 10, 50, 100, 500]
-  value:number
+  value: number
 
   constructor(value: number) {
     this.validate(value)
@@ -43,13 +43,13 @@ export class Coin {
   }
 }
 
-// [ ] Coin を型にする(Value Object)
 export class VendingMachine {
   private allowedCoins: Coin[] = []
   private allowedCoinValues: number[] = [10, 50, 100, 500]
   private map: Map<ButtonId, Beverage> = new Map()
   private payment: number = 0
   private insertedCoins: Coin[] = []
+  private selectedBeverage: Beverage | null = null
 
   constructor() {
     this.init()
@@ -77,14 +77,15 @@ export class VendingMachine {
 
   pressButton(id: ButtonId): { beverageName: string, change: Coin[] } {
     const {name, price} = this.getBeverageByButtonId(id)
+
     if (!this.isPaymentOver(price)) {
       const coins = this.insertedCoins
       this.reset()
-      return { beverageName: '', change: coins}
+      return {beverageName: '', change: coins}
     }
     const change = this.returnChange(price)
 
-    return { beverageName: name, change: change}
+    return {beverageName: name, change: change}
   }
 
   private getBeverageByButtonId(id: ButtonId): Beverage {
@@ -126,5 +127,38 @@ export class VendingMachine {
   isButtonShining(id: ButtonId): boolean {
     const beverage = this.getBeverageByButtonId(id)
     return this.isPaymentOver(beverage.price)
+  }
+
+  select(id: ButtonId): this {
+    if (this.payment !== 0) throw new Error()
+    this.selectedBeverage = this.getBeverageByButtonId(id)
+    return this
+  }
+
+  touchCard(card: FeliCa): Beverage['name'] {
+    if (this.selectedBeverage === null) throw new Error()
+    card.consume(this.selectedBeverage.price)
+    return this.selectedBeverage.name
+  }
+}
+
+interface FeliCa {
+  getBalance(): number
+
+  consume(price: number): this
+}
+
+export class Suica implements FeliCa {
+  constructor(private balance: number) {
+  }
+
+  getBalance(): number {
+    return this.balance
+  }
+
+  consume(price: number): this {
+    if (this.balance < price) throw new Error('Short of balance')
+    this.balance -= price
+    return this
   }
 }

@@ -1,4 +1,4 @@
-import {Coin, VendingMachine} from '../src/vending-machine'
+import {Coin, Suica, VendingMachine} from '../src/vending-machine'
 
 describe('VendingMachine', () => {
   let machine: VendingMachine
@@ -125,6 +125,27 @@ describe('VendingMachine', () => {
     test('100円を入れて返却ボタンを押すと100円のお釣りが出る', () => {
       const actual = machine.insert(new Coin(100)).cancel()
       expect(actual).toEqual([new Coin(100)])
+    })
+  })
+
+  describe('FeliCa支払いに対応', () => {
+    test('1000円がチャージされたFeliCaのカードでColaが買える', () => {
+      const card = new Suica(1000)
+      const actual = machine.select('A').touchCard(card)
+      expect(actual).toBe('Cola')
+
+      const balance = card.getBalance()
+      expect(balance).toBe(900)
+    })
+
+    test('10円がチャージされたFeliCaのカードでは、Colaは買えない', () => {
+      const card = new Suica(10)
+      expect(() => {
+        machine.select('A').touchCard(card)
+      }).toThrow()
+
+      const balance = card.getBalance()
+      expect(balance).toBe(10)
     })
   })
 })
