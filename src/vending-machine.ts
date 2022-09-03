@@ -16,68 +16,115 @@ const beverageList: Beverage[] = [
   {name: 'Red Bull', price: 200},
 ]
 
-// [ ] buy / pressButton を同じメソッドにする
-// [ ] Coin を型にする
+const buttonIds = ['A', 'B', 'C', 'R'] as const
+type ButtonId = typeof buttonIds[number]
+
+export class Coin {
+  private readonly allowedValues: number[] = [1, 5, 10, 50, 100, 500]
+  value:number
+
+  constructor(value: number) {
+    this.validate(value)
+    this.value = value
+  }
+
+  private validate(value: number) {
+    if (!this.allowedValues.includes(value)) {
+      throw new Error()
+    }
+  }
+
+  getValue() {
+    return this.value
+  }
+
+  equals(coin: Coin): boolean {
+    return this.value === coin.getValue()
+  }
+}
+
+// [ ] Coin を型にする(Value Object)
 export class VendingMachine {
-  private readonly allowedCoins: number[] = [10, 50, 100, 500]
-  private readonly buttonIds = ['A', 'B', 'C', 'R']
+  private allowedCoins: Coin[] = []
+  private allowedCoinValues: number[] = [10, 50, 100, 500]
+  private map: Map<ButtonId, Beverage> = new Map()
   private payment: number = 0
-  private map: Map<typeof this.buttonIds[number], Beverage> = new Map()
+  private insertedCoins: Coin[] = []
 
   constructor() {
     this.init()
   }
 
   private init() {
-    for (const [index, id] of Object.entries(this.buttonIds)) {
+    for (const [index, id] of Object.entries(buttonIds)) {
       const i = Number.parseInt(index, 10)
       this.map.set(id, beverageList[i])
     }
+
+    this.allowedCoins = this.allowedCoinValues.map((value) => new Coin(value))
   }
 
-  buy(id: string): { beverageName: string, change: number } {
-    const beverage = this.getBeverageByButtonId(id)
-    const change = this.returnChange(beverage.price)
-
-    return {beverageName: beverage.name, change}
-  }
-
-  insert(coin: number): this {
-    if (!this.isCoinAllowed(coin)) throw new Error()
-    this.payment += coin
+  insert(coin: Coin): this {
+    if (!this.isAllowedCoin(coin)) throw new Error()
+    this.payment += coin.getValue()
+    this.insertedCoins = [...this.insertedCoins, coin]
     return this
   }
 
-  private isCoinAllowed(coin: number): boolean {
-    return this.allowedCoins.includes(coin)
+  private isAllowedCoin(coin: Coin): boolean {
+    return this.allowedCoins.filter((allowedCoin: Coin) => allowedCoin.equals(coin)).length === 1
   }
 
-  pressButton(id: string): string {
+  pressButton(id: ButtonId): { beverageName: string, change: Coin[] } {
     const {name, price} = this.getBeverageByButtonId(id)
-    if (!this.isPaymentOver(price)) return ''
-    return name
+    if (!this.isPaymentOver(price)) {
+      const coins = this.insertedCoins
+      this.reset()
+      return { beverageName: '', change: coins}
+    }
+    const change = this.returnChange(price)
+
+    return { beverageName: name, change: change}
+  }
+
+  private getBeverageByButtonId(id: ButtonId): Beverage {
+    const item = this.map.get(id)
+    if (!item) throw new Error()
+    return item
   }
 
   private isPaymentOver(price: number): boolean {
     return this.payment >= price
   }
 
-  cancel(): number {
-    return this.payment
+  private returnChange(price: number): Coin[] {
+    let changeValue = this.payment - price
+    let changeCoins: Coin[] = []
+    const allowedValues = this.allowedCoinValues.reverse()
+
+    for (const value of allowedValues) {
+      const count = Math.floor(changeValue / value)
+      if (count >= 1) {
+        changeCoins = [...changeCoins, ...new Array(count).fill(new Coin(value), 0, count)]
+      }
+      changeValue = changeValue % value
+    }
+    this.reset()
+
+    return changeCoins
   }
 
-  returnChange(price: number): number {
-    return this.payment - price
+  private reset() {
+    this.payment = 0
+    this.insertedCoins = []
   }
 
-  isButtonShining(id: string): boolean {
+  cancel(): Coin[] {
+    return this.insertedCoins
+  }
+
+  isButtonShining(id: ButtonId): boolean {
     const beverage = this.getBeverageByButtonId(id)
     return this.isPaymentOver(beverage.price)
-  }
-
-  private getBeverageByButtonId(id: string): Beverage {
-    const item = this.map.get(id)
-    if (!item) throw new Error()
-    return item
   }
 }
