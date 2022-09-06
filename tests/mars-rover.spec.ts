@@ -39,9 +39,6 @@ describe('Field', () => {
     expect(actual[0]).toBe('5 1 E')
   })
 
-  // (5, 3)(5, 1)(4, 1)(5, 1) E
-  // (3 + 2 - 1 + 1, 3 - 2 )
-
   test('(1, 2)に N向きの rover を設置したら、rover は(1, 2)でN向きである', () => {
     const field = new Field([5, 5])
     const rover = new Rover([1, 2], 'N')
