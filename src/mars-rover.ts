@@ -1,3 +1,22 @@
+export const main = (input: string) => {
+  const inputs = input.split('\n')
+  const [x, y] = inputs[0].split(' ').map((n) => parseInt(n, 10))
+  const field = new Field([x, y])
+
+  for (let i = 1; i < inputs.length; i++) {
+    if (i % 2 === 1) {
+      const [x, y, direction] = inputs[i].split(' ')
+      const [num_x, num_y] = [x, y].map((n) => parseInt(n, 10))
+      const rover = new Rover([num_x, num_y], direction as Direction)
+      field.add(rover)
+      const command = new Command(inputs[i + 1])
+      rover.accept(command)
+    }
+  }
+
+  return field.getPositions().join('\n')
+}
+
 type Position = [number, number]
 type Range = [number, number]
 type Direction = 'N' | 'E' | 'S' | 'W'

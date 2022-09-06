@@ -1,6 +1,22 @@
-import {Command, Field, Rover} from "../src/mars-rover";
+import {Command, Field, main, Rover} from "../src/mars-rover";
 
 // https://danilsuits.github.io/mars-rover-kata/
+
+describe('Input', () => {
+  test('入力例を受け取ると、出力例を返す', () => {
+    const input = `5 5
+1 2 N
+LMLMLMLMM
+3 3 E
+MMRMMRMRRM`
+    const expected = `1 3 N
+5 1 E`
+
+    const actual = main(input)
+      expect(actual).toBe(expected)
+  })
+})
+
 
 describe('Field', () => {
   test('(5, 5)のフィールドの(1, 2)のN向きに設置したroverに命令 LMLMLMLMM を与えると、(1, 3)にN向きにいる', () => {
